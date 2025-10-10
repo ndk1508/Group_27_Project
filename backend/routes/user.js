@@ -1,9 +1,11 @@
-// routes/user.js
 const express = require('express');
 const router = express.Router();
-const userController = require('../controllers/usercontroller');
+const userController = require('../controllers/userController');
 
-router.get('/users', userController.getUsers);
-router.post('/users', userController.addUser);
+// GET /users → http://localhost:3000/users
+router.get('/', userController.getUsers);
+
+// POST /users
+router.post('/', userController.createUser);
 
 module.exports = router;
