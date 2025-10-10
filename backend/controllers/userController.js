@@ -1,22 +1,23 @@
-// controllers/userController.js
-let users = [
-  { id: 1, name: "Nguyen Van A" },
-  { id: 2, name: "Tran Thi B" }
-];
+const User = require('../models/User');
 
 // GET /users
-const getUsers = (req, res) => {
-  res.json(users);
+exports.getUsers = async (req, res) => {
+    try {
+        const users = await User.find();
+        res.json(users);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
 };
 
 // POST /users
-const addUser = (req, res) => {
-  const newUser = {
-    id: users.length + 1,
-    name: req.body.name
-  };
-  users.push(newUser);
-  res.status(201).json(newUser);
+exports.createUser = async (req, res) => {
+    const { name, email } = req.body;
+    const user = new User({ name, email });
+    try {
+        const newUser = await user.save();
+        res.status(201).json(newUser);
+    } catch (err) {
+        res.status(400).json({ message: err.message });
+    }
 };
-
-module.exports = { getUsers, addUser };
