@@ -1,22 +1,40 @@
-// controllers/userController.js
-let users = [
-  { id: 1, name: "Nguyen Van A" },
-  { id: 2, name: "Tran Thi B" }
-];
+const User = require('../models/User');
 
-// GET /users
-const getUsers = (req, res) => {
+exports.getUsers = async (req, res) => {
+  const users = await User.find().lean();
   res.json(users);
 };
 
-// POST /users
-const addUser = (req, res) => {
-  const newUser = {
-    id: users.length + 1,
-    name: req.body.name
-  };
-  users.push(newUser);
-  res.status(201).json(newUser);
+exports.createUser = async (req, res) => {
+  const { name, email } = req.body || {};
+  if (!name?.trim() || !email?.trim())
+    return res.status(400).json({ message: 'Name & email are required' });
+
+  try {
+    const u = await User.create({ name: name.trim(), email: email.trim() });
+    res.status(201).json(u);
+  } catch (err) {
+    if (err.code === 11000) return res.status(400).json({ message: 'Email đã tồn tại' });
+    res.status(400).json({ message: err.message });
+  }
 };
 
-module.exports = { getUsers, addUser };
+exports.updateUser = async (req, res) => {
+  try {
+    const u = await User.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!u) return res.status(404).json({ message: 'User not found' });
+    res.json(u);
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+};
+
+exports.deleteUser = async (req, res) => {
+  try {
+    const u = await User.findByIdAndDelete(req.params.id);
+    if (!u) return res.status(404).json({ message: 'User not found' });
+    res.json({ message: 'User deleted', deletedUser: u });
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+};

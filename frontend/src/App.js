@@ -1,20 +1,19 @@
+// src/App.js
 import React, { useState } from "react";
-import AddUser from "./components/AddUser";
 import UserList from "./components/UserList";
-import "./App.css";
+import AddUser from "./components/AddUser";
 
-function App() {
-  const [refreshToken, setRefreshToken] = useState(0);
-
-  const triggerRefresh = () => setRefreshToken((t) => t + 1);
-
+export default function App() {
+  const [refresh, setRefresh] = useState(0);
   return (
-    <div className="App" style={{ padding: 24, fontFamily: "system-ui" }}>
-      <h1>Quản lý người dùng 👤</h1>
-      <AddUser onAdded={triggerRefresh} />
-      <UserList refreshToken={refreshToken} />
+    <div style={{ display:"flex", gap:32, justifyContent:"space-around", padding:32 }}>
+      <div>
+        <h1>Thêm người dùng</h1>
+        <AddUser onUserAdded={() => setRefresh(r => r + 1)} />
+      </div>
+      <div>
+        <UserList refreshToken={refresh} />
+      </div>
     </div>
   );
 }
-
-export default App;
