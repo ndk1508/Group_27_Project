@@ -1,11 +1,1 @@
-Phân công công vi?c nhóm - edited by frontend A
-
-Sinh viÃªn Nguyá»…n ÄÄƒng Khoa (Leader) â€“ Backend
-â†’ XÃ¢y dá»±ng API, quáº£n lÃ½ server, káº¿t ná»‘i cÆ¡ sá»Ÿ dá»¯ liá»‡u, quáº£n lÃ½ GitHub vÃ  merge code.
-
-Sinh viÃªn LÃ¢m Minh Hiáº¿u â€“ Frontend
-â†’ XÃ¢y dá»±ng giao diá»‡n React, káº¿t ná»‘i API, xá»­ lÃ½ logic giao diá»‡n.
-
-Sinh viÃªn LÃª Minh Huy â€“ Database
-â†’ Thiáº¿t káº¿ cáº¥u trÃºc database, táº¡o collection, há»— trá»£ káº¿t ná»‘i backend.
-FRONTEND EXTRA LINE
+Phân công công vi?c nhóm - edited by frontend A\n\nSinh viên Nguy?n Ğang Khoa (Leader) – Backend\n? Xây d?ng API, qu?n lı server, k?t n?i co s? d? li?u, qu?n lı GitHub và merge code.\n\nSinh viên Lâm Minh Hi?u – Frontend\n? Xây d?ng giao di?n React, k?t n?i API, x? lı logic giao di?n.\n\nSinh viên Lê Minh Huy  Database\n Thi?t k? c?u trúc database, t?o collection, h? tr? k?t n?i backend.
