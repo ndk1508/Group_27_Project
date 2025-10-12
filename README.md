@@ -1,4 +1,4 @@
-Phân công công việc nhóm
+Ph�n c�ng c�ng vi?c nh�m - edited by frontend A
 
 Sinh viên Nguyễn Đăng Khoa (Leader) – Backend
 → Xây dựng API, quản lý server, kết nối cơ sở dữ liệu, quản lý GitHub và merge code.
@@ -8,3 +8,4 @@ Sinh viên Lâm Minh Hiếu – Frontend
 
 Sinh viên Lê Minh Huy – Database
 → Thiết kế cấu trúc database, tạo collection, hỗ trợ kết nối backend.
+FRONTEND EXTRA LINE
