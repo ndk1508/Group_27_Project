@@ -7,8 +7,21 @@ export default function AddUser({ onUserAdded }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // 🟡 Validation
+    if (!name.trim()) {
+      alert("Tên không được để trống!");
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      alert("Email không hợp lệ!");
+      return;
+    }
+
     try {
-      const res = await api.post("/users", { name, email });
+      await api.post("/users", { name, email });
       alert("Thêm người dùng thành công!");
       setName("");
       setEmail("");
