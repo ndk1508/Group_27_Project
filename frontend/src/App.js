@@ -1,18 +1,21 @@
 import React, { useState } from "react";
-import AddUser from "./components/AddUser";
 import UserList from "./components/UserList";
-import "./App.css";
+import AddUser from "./components/AddUser";
 
 function App() {
   const [refreshToken, setRefreshToken] = useState(0);
 
-  const triggerRefresh = () => setRefreshToken((t) => t + 1);
+  const reloadUsers = () => setRefreshToken(prev => prev + 1);
 
   return (
-    <div className="App" style={{ padding: 24, fontFamily: "system-ui" }}>
-      <h1>Quản lý người dùng 👤</h1>
-      <AddUser onAdded={triggerRefresh} />
-      <UserList refreshToken={refreshToken} />
+    <div style={{ display: "flex", justifyContent: "space-around", padding: 32 }}>
+      <div>
+        <h1>Thêm người dùng</h1>
+        <AddUser onUserAdded={reloadUsers} />
+      </div>
+      <div>
+        <UserList key={refreshToken} />
+      </div>
     </div>
   );
 }
