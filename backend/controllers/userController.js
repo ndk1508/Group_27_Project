@@ -1,31 +1,40 @@
-// controllers/userController.js
+const User = require('../models/User');
 
-let autoId = 1;
-let users = [
-  { id: autoId++, name: "Nguyen Van A", email: "a@example.com" },
-  { id: autoId++, name: "Tran Thi B", email: "b@example.com" },
-];
-
-// GET /users
-exports.getUsers = (req, res) => {
+exports.getUsers = async (req, res) => {
+  const users = await User.find().lean();
   res.json(users);
 };
 
-// POST /users
-exports.createUser = (req, res) => {
+exports.createUser = async (req, res) => {
   const { name, email } = req.body || {};
-  if (!name?.trim()) {
-    return res.status(400).json({ message: "Name is required" });
-  }
-  if (!/\S+@\S+\.\S+/.test(email || "")) {
-    return res.status(400).json({ message: "Email is invalid" });
-  }
-  const exists = users.some(u => u.email.toLowerCase() === email.toLowerCase());
-  if (exists) {
-    return res.status(409).json({ message: "Email already exists" });
-  }
+  if (!name?.trim() || !email?.trim())
+    return res.status(400).json({ message: 'Name & email are required' });
 
-  const newUser = { id: autoId++, name: name.trim(), email: email.trim() };
-  users.push(newUser);
-  res.status(201).json(newUser);
+  try {
+    const u = await User.create({ name: name.trim(), email: email.trim() });
+    res.status(201).json(u);
+  } catch (err) {
+    if (err.code === 11000) return res.status(400).json({ message: 'Email đã tồn tại' });
+    res.status(400).json({ message: err.message });
+  }
+};
+
+exports.updateUser = async (req, res) => {
+  try {
+    const u = await User.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!u) return res.status(404).json({ message: 'User not found' });
+    res.json(u);
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+};
+
+exports.deleteUser = async (req, res) => {
+  try {
+    const u = await User.findByIdAndDelete(req.params.id);
+    if (!u) return res.status(404).json({ message: 'User not found' });
+    res.json({ message: 'User deleted', deletedUser: u });
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
 };
