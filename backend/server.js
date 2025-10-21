@@ -22,7 +22,10 @@ app.get('/health', (req, res) => {
 
 // Import routes
 const userRoutes = require("./routes/user");
+const authRoutes = require("./routes/auth");
+
 app.use("/", userRoutes); // => /users
+app.use("/api", authRoutes); // Auth routes
 
 // Chạy server
 const PORT = process.env.PORT || 3000;
