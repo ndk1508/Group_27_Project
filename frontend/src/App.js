@@ -1,12 +1,16 @@
+// src/App.js
 import React, { useState, useEffect } from "react";
+import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 import "./App.css";
+import Signup from "./pages/Signup";
+import Login from "./pages/Login";
+import ProtectedRoute from "./components/ProtectedRoute"; // ✅ thêm dòng này
 
-function App() {
+function UsersCrud() {
   const [users, setUsers] = useState([]);
   const [form, setForm] = useState({ name: "", email: "" });
   const [editingId, setEditingId] = useState(null);
 
-  // 🟢 Lấy danh sách người dùng từ Mongo
   useEffect(() => {
     fetch("http://localhost:3000/users")
       .then((res) => res.json())
@@ -14,13 +18,11 @@ function App() {
       .catch(console.error);
   }, []);
 
-  // 🟢 Thêm hoặc cập nhật người dùng
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.name || !form.email) return alert("Vui lòng nhập đủ thông tin!");
 
     if (editingId) {
-      // PUT (update)
       const res = await fetch(`http://localhost:3000/users/${editingId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -31,11 +33,8 @@ function App() {
         setUsers(users.map((u) => (u._id === updated._id ? updated : u)));
         setEditingId(null);
         setForm({ name: "", email: "" });
-      } else {
-        alert("Không thể cập nhật!");
-      }
+      } else alert("Không thể cập nhật!");
     } else {
-      // POST (create)
       const res = await fetch("http://localhost:3000/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -52,13 +51,11 @@ function App() {
     }
   };
 
-  // 🟢 Sửa người dùng
   const handleEdit = (user) => {
     setEditingId(user._id);
     setForm({ name: user.name, email: user.email });
   };
 
-  // 🟢 Xoá người dùng
   const handleDelete = async (id) => {
     try {
       await fetch(`http://localhost:3000/users/${id}`, {
@@ -87,9 +84,7 @@ function App() {
             value={form.email}
             onChange={(e) => setForm({ ...form, email: e.target.value })}
           />
-          <button type="submit">
-            {editingId ? "Cập nhật" : "Thêm mới"}
-          </button>
+          <button type="submit">{editingId ? "Cập nhật" : "Thêm mới"}</button>
           {editingId && (
             <button
               type="button"
@@ -133,4 +128,38 @@ function App() {
   );
 }
 
-export default App;
+// --- App chính ---
+export default function App() {
+  return (
+    <BrowserRouter>
+      <div style={{ padding: 16 }}>
+        <nav
+          style={{
+            display: "flex",
+            gap: 12,
+            alignItems: "center",
+            marginBottom: 16,
+          }}
+        >
+          <Link to="/">CRUD Users</Link>
+          <Link to="/signup">Đăng ký</Link>
+          <Link to="/login">Đăng nhập</Link>
+        </nav>
+
+        <Routes>
+          {/* ✅ Chặn truy cập nếu chưa đăng nhập */}
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <UsersCrud />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/login" element={<Login />} />
+        </Routes>
+      </div>
+    </BrowserRouter>
+  );
+}
