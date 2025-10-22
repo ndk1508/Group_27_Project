@@ -2,6 +2,7 @@ const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
 const mongoose = require('mongoose');
+const authRoutes = require("./routes/auth");
 
 dotenv.config();
 console.log('MONGO_URI =', process.env.MONGO_URI);
@@ -23,6 +24,7 @@ app.get('/health', (req, res) => {
 // Import routes
 const userRoutes = require("./routes/user");
 app.use("/", userRoutes); // => /users
+app.use("/api/auth", authRoutes);
 
 // Chạy server
 const PORT = process.env.PORT || 3000;
