@@ -43,13 +43,18 @@ exports.createUser = async (req, res) => {
 exports.updateUser = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, email } = req.body;
+    const { name, email, role } = req.body;
 
-    const updatedUser = await User.findByIdAndUpdate(
-      id,
-      { name, email },
-      { new: true } // trả về bản ghi sau khi cập nhật
-    );
+    // Xây dựng object cập nhật động; chỉ cập nhật các trường được cung cấp
+    const update = {};
+    if (typeof name !== "undefined") update.name = name;
+    if (typeof email !== "undefined") update.email = email;
+    if (typeof role !== "undefined") update.role = role; // route đã bảo vệ: chỉ admin mới gọi
+
+    const updatedUser = await User.findByIdAndUpdate(id, update, {
+      new: true,           // trả về doc sau cập nhật
+      runValidators: true, // chạy validate của schema
+    }).select("-password"); // ẩn password trong response
 
     if (!updatedUser) {
       return res.status(404).json({ message: "User not found" });
