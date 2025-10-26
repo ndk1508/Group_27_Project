@@ -77,3 +77,39 @@ exports.deleteUser = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+// Xem thông tin cá nhân
+exports.getProfile = async (req, res) => {
+  try {
+    if (!req.user) return res.status(404).json({ message: "Không tìm thấy người dùng" });
+    res.json(req.user);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// Cập nhật thông tin cá nhân
+exports.updateProfile = async (req, res) => {
+  try {
+    const { name, avatar, password } = req.body;
+
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ message: "Không tìm thấy người dùng" });
+
+    // Cập nhật thông tin
+    if (name) user.name = name;
+    if (avatar) user.avatar = avatar;
+
+    // Nếu có đổi mật khẩu thì mã hóa lại
+    if (password) {
+      const bcrypt = require("bcryptjs");
+      user.password = await bcrypt.hash(password, 10);
+    }
+
+    await user.save();
+
+    res.json({ message: "Cập nhật thành công", user });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
