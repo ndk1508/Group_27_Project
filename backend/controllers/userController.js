@@ -112,4 +112,32 @@ exports.updateProfile = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+// Lấy danh sách tất cả user (Admin)
+exports.getAllUsers = async (req, res) => {
+  try {
+    const users = await User.find().select("-password"); // ẩn mật khẩu
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// Xóa user (Admin hoặc chính chủ)
+exports.deleteUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Admin hoặc tự xóa
+    if (req.user.role !== "admin" && req.user._id.toString() !== id) {
+      return res.status(403).json({ message: "Không có quyền xóa tài khoản này" });
+    }
+
+    const user = await User.findByIdAndDelete(id);
+    if (!user) return res.status(404).json({ message: "Không tìm thấy người dùng" });
+
+    res.json({ message: "Xóa tài khoản thành công" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
 
