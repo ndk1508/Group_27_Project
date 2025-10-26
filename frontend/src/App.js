@@ -2,52 +2,49 @@
 import React, { useState, useEffect } from "react";
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 import "./App.css";
+
+import api from "./api/axios";
 import Signup from "./pages/Signup";
 import Login from "./pages/Login";
-import ProtectedRoute from "./components/ProtectedRoute"; // ✅ thêm dòng này
+import ProtectedRoute from "./components/ProtectedRoute";
+import Admin from "./pages/Admin";
+import AdminRoute from "./components/AdminRoute";
+import Profile from "./pages/Profile";
 
+// --- Trang CRUD Users (chỉ người đăng nhập mới xem được) ---
 function UsersCrud() {
   const [users, setUsers] = useState([]);
   const [form, setForm] = useState({ name: "", email: "" });
   const [editingId, setEditingId] = useState(null);
 
+  // Lấy danh sách người dùng
   useEffect(() => {
-    fetch("http://localhost:3000/users")
-      .then((res) => res.json())
-      .then(setUsers)
-      .catch(console.error);
+    api
+      .get("/users")
+      .then((res) => setUsers(res.data || []))
+      .catch((err) => {
+        console.error(err);
+      });
   }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.name || !form.email) return alert("Vui lòng nhập đủ thông tin!");
 
-    if (editingId) {
-      const res = await fetch(`http://localhost:3000/users/${editingId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-      if (res.ok) {
-        const updated = await res.json();
-        setUsers(users.map((u) => (u._id === updated._id ? updated : u)));
+    try {
+      if (editingId) {
+        const { data: updated } = await api.put(`/users/${editingId}`, form);
+        setUsers((prev) => prev.map((u) => (u._id === updated._id ? updated : u)));
         setEditingId(null);
         setForm({ name: "", email: "" });
-      } else alert("Không thể cập nhật!");
-    } else {
-      const res = await fetch("http://localhost:3000/users", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-      if (res.ok) {
-        const newUser = await res.json();
-        setUsers([...users, newUser]);
-        setForm({ name: "", email: "" });
       } else {
-        const err = await res.json();
-        alert(err.message);
+        const { data: newUser } = await api.post("/users", form);
+        setUsers((prev) => [...prev, newUser]);
+        setForm({ name: "", email: "" });
       }
+    } catch (err) {
+      const msg = err?.response?.data?.message || "Thao tác thất bại!";
+      alert(msg);
     }
   };
 
@@ -58,12 +55,11 @@ function UsersCrud() {
 
   const handleDelete = async (id) => {
     try {
-      await fetch(`http://localhost:3000/users/${id}`, {
-        method: "DELETE",
-      });
-      setUsers(users.filter((u) => u._id !== id));
-    } catch (error) {
-      console.error("Lỗi khi xoá:", error);
+      await api.delete(`/users/${id}`);
+      setUsers((prev) => prev.filter((u) => u._id !== id));
+    } catch (err) {
+      console.error("Lỗi khi xoá:", err);
+      alert(err?.response?.data?.message || "Xoá thất bại");
     }
   };
 
@@ -133,6 +129,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <div style={{ padding: 16 }}>
+        {/* Thanh menu điều hướng */}
         <nav
           style={{
             display: "flex",
@@ -144,10 +141,13 @@ export default function App() {
           <Link to="/">CRUD Users</Link>
           <Link to="/signup">Đăng ký</Link>
           <Link to="/login">Đăng nhập</Link>
+          <Link to="/admin">Admin</Link>
+          <Link to="/profile">Hồ sơ cá nhân</Link>
         </nav>
 
+        {/* Định nghĩa các route */}
         <Routes>
-          {/* ✅ Chặn truy cập nếu chưa đăng nhập */}
+          {/* Trang CRUD cần đăng nhập */}
           <Route
             path="/"
             element={
@@ -156,8 +156,30 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+
+          {/* Trang đăng ký / đăng nhập */}
           <Route path="/signup" element={<Signup />} />
           <Route path="/login" element={<Login />} />
+
+          {/* Trang chỉ dành cho admin */}
+          <Route
+            path="/admin"
+            element={
+              <AdminRoute>
+                <Admin />
+              </AdminRoute>
+            }
+          />
+
+          {/* Trang hồ sơ cá nhân (profile) */}
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
         </Routes>
       </div>
     </BrowserRouter>
