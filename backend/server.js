@@ -2,8 +2,8 @@ const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
 const mongoose = require('mongoose');
-const authRoutes = require("./routes/auth");
 
+// Load environment variables FIRST
 dotenv.config();
 console.log('MONGO_URI =', process.env.MONGO_URI);
 
@@ -12,6 +12,7 @@ mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('✅ MongoDB connected successfully'))
   .catch((err) => console.error('❌ MongoDB connection error:', err));
 
+// Initialize Express
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -22,9 +23,12 @@ app.get('/health', (req, res) => {
 });
 
 // Import routes
+const authRoutes = require("./routes/auth");
 const userRoutes = require("./routes/user");
-app.use("/", userRoutes); // => /users
+
+// Register routes
 app.use("/api/auth", authRoutes);
+app.use("/", userRoutes); // => /users
 
 // Chạy server
 const PORT = process.env.PORT || 3000;
