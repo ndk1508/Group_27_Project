@@ -11,6 +11,9 @@ import Admin from "./pages/Admin";
 import AdminRoute from "./components/AdminRoute";
 import Profile from "./pages/Profile";
 
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
+
 // --- Trang CRUD Users (chỉ người đăng nhập mới xem được) ---
 function UsersCrud() {
   const [users, setUsers] = useState([]);
@@ -141,8 +144,8 @@ export default function App() {
           <Link to="/">CRUD Users</Link>
           <Link to="/signup">Đăng ký</Link>
           <Link to="/login">Đăng nhập</Link>
-          <Link to="/admin">Admin</Link>
-          <Link to="/profile">Hồ sơ cá nhân</Link>
+
+
         </nav>
 
         {/* Định nghĩa các route */}
@@ -180,6 +183,8 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+          <Route path="/forgot" element={<ForgotPassword />} />
+          <Route path="/reset" element={<ResetPassword />} />
         </Routes>
       </div>
     </BrowserRouter>
