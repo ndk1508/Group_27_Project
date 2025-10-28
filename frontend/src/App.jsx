@@ -5,11 +5,14 @@ import "./App.css";
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AuthStatus from "./components/AuthStatus";
+import AdminRoute from "./components/AdminRoute";
 
 import Signup from "./pages/Signup";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
+import Admin from "./pages/Admin";
+import Users from "./pages/Users";
 
 
 export default function App() {
@@ -29,6 +32,8 @@ export default function App() {
             <Link to="/signup">Đăng ký</Link>
             <Link to="/login">Đăng nhập</Link>
             <Link to="/dashboard">Dashboard</Link>
+            <Link to="/users">Users</Link>
+            <Link to="/admin">Admin</Link>
           </nav>
 
           {/* Hiển thị trạng thái đăng nhập + token (phục vụ screenshot yêu cầu) */}
@@ -48,15 +53,36 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
+
+            {/* CRUD Users (yêu cầu đăng nhập) */}
+            <Route
+              path="/users"
+              element={
+                <ProtectedRoute>
+                  <Users />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Trang quản trị dành cho admin */}
+            <Route
+              path="/admin"
+              element={
+                <AdminRoute>
+                  <Admin />
+                </AdminRoute>
+              }
+            />
           </Routes>
-          <Route
-  path="/profile"
-  element={
-    <ProtectedRoute>
-      <Profile />
-    </ProtectedRoute>
-  }
-/>
         </div>
       </BrowserRouter>
     </AuthProvider>

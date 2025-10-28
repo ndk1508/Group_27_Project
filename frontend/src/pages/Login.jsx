@@ -2,9 +2,11 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
+import { useAuth } from "../context/AuthContext";
 
 export default function Login() {
   const navigate = useNavigate();
+  const { login: setAuth, logout: clearAuth } = useAuth();
 
   // ----- common -----
   const [mode, setMode] = useState("login"); // 'login' | 'forgot' | 'reset'
@@ -28,12 +30,15 @@ export default function Login() {
     setMsg("");
     try {
       const res = await api.post("/api/auth/login", loginForm);
-      const { token, user, message } = res.data || {};
-      if (!token || !user) return setMsg("Không nhận được token");
+      const { accessToken, refreshToken, user, message, token: legacyToken } = res.data || {};
+      const effectiveToken = accessToken || legacyToken; // hỗ trợ cả tên cũ 'token' nếu backend trả về
+      if (!effectiveToken || !user) return setMsg("Không nhận được token");
 
-      localStorage.setItem("token", token);
-      localStorage.setItem("user", JSON.stringify(user));
-      setToken(token);
+      // Lưu vào AuthContext + localStorage
+      setAuth(effectiveToken, user);
+      // Lưu refreshToken (nếu cần dùng cho /refresh)
+      if (refreshToken) localStorage.setItem("refreshToken", refreshToken);
+      setToken(effectiveToken);
       setMsg(message || "Đăng nhập thành công ✅");
 
       // điều hướng theo role
@@ -46,10 +51,14 @@ export default function Login() {
 
   const doLogout = async () => {
     try {
-      await api.post("/api/auth/logout");
+      // Gửi refreshToken nếu có để revoke
+      const rt = localStorage.getItem("refreshToken");
+      await api.post("/api/auth/logout", rt ? { refreshToken: rt } : {});
     } catch {}
     localStorage.removeItem("token");
+    localStorage.removeItem("refreshToken");
     localStorage.removeItem("user");
+    clearAuth?.();
     setToken("");
     setMsg("Đã đăng xuất 👋");
   };
