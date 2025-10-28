@@ -5,6 +5,7 @@ const crypto = require("crypto");
 const sendEmail = require("../utils/sendEmail");
 const cloudinary = require("../utils/cloudinary");
 const multer = require("multer");
+const RefreshToken = require('../models/RefreshToken'); // SV3 tạo schema này
 
 // Multer để nhận file upload
 const storage = multer.memoryStorage();
@@ -46,13 +47,28 @@ exports.login = async (req, res) => {
     if (!isMatch)
       return res.status(400).json({ message: "Sai mật khẩu" });
 
-    const token = jwt.sign(
-      { id: user._id, role: user.role },
-      process.env.JWT_SECRET || "secret123",
-      { expiresIn: "1d" }
-    );
+    // Tạo access token và refresh token
+    const tokens = generateTokens(user);
 
-    res.json({ message: "Đăng nhập thành công", token, user });
+    // Lưu refresh token vào database
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 ngày
+    await RefreshToken.create({
+      token: tokens.refreshToken,
+      userId: user._id,
+      expiresAt: expiresAt
+    });
+
+    res.json({ 
+      message: "Đăng nhập thành công", 
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role
+      }
+    });
   } catch (err) {
     res.status(500).json({ message: "Lỗi server", error: err.message });
   }
@@ -61,8 +77,19 @@ exports.login = async (req, res) => {
 // ======================================================
 //  ĐĂNG XUẤT
 // ======================================================
-exports.logout = (req, res) => {
-  res.json({ message: "Đã đăng xuất (xóa token phía client)" });
+exports.logout = async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+    
+    if (refreshToken) {
+      // Xóa refresh token khỏi database (revoke)
+      await RefreshToken.deleteOne({ token: refreshToken });
+    }
+    
+    res.json({ message: "Đã đăng xuất thành công" });
+  } catch (err) {
+    res.status(500).json({ message: "Lỗi server", error: err.message });
+  }
 };
 
 // ======================================================
@@ -165,5 +192,55 @@ exports.uploadAvatar = async (req, res) => {
     stream.end(req.file.buffer);
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+};
+// Hàm tạo token
+const generateTokens = (user) => {
+  // Dùng fallback để tránh lỗi "secretOrPrivateKey must have a value" nếu biến môi trường thiếu
+  const accessSecret = process.env.ACCESS_TOKEN_SECRET || process.env.JWT_SECRET || "access_fallback_secret";
+  const refreshSecret = process.env.REFRESH_TOKEN_SECRET || process.env.JWT_SECRET || "refresh_fallback_secret";
+  const accessExpire = process.env.TOKEN_EXPIRE || "15m";
+  const refreshExpire = process.env.REFRESH_EXPIRE || "7d";
+
+  const accessToken = jwt.sign(
+    { id: user._id, email: user.email },
+    accessSecret,
+    { expiresIn: accessExpire }
+  );
+
+  const refreshToken = jwt.sign(
+    { id: user._id },
+    refreshSecret,
+    { expiresIn: refreshExpire }
+  );
+
+  return { accessToken, refreshToken };
+};
+// API refresh
+exports.refreshToken = async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+    if (!refreshToken) return res.status(401).json({ message: 'Refresh token required' });
+
+    const storedToken = await RefreshToken.findOne({ token: refreshToken });
+    if (!storedToken) return res.status(403).json({ message: 'Invalid refresh token' });
+
+  const verifySecret = process.env.REFRESH_TOKEN_SECRET || process.env.JWT_SECRET || "refresh_fallback_secret";
+  jwt.verify(refreshToken, verifySecret, async (err, user) => {
+      if (err) return res.status(403).json({ message: 'Expired refresh token' });
+
+      const newTokens = generateTokens({ _id: user.id, email: user.email });
+
+      // Cập nhật refresh token trong DB
+      storedToken.token = newTokens.refreshToken;
+      await storedToken.save();
+
+      res.json({
+        accessToken: newTokens.accessToken,
+        refreshToken: newTokens.refreshToken,
+      });
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error });
   }
 };

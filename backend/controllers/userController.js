@@ -50,12 +50,18 @@ exports.updateUser = async (req, res) => {
     const update = {};
     if (typeof name !== "undefined") update.name = name;
     if (typeof email !== "undefined") update.email = email;
-    if (typeof role !== "undefined") update.role = role; // route đã bảo vệ: chỉ admin mới gọi
+
+    // Phân quyền:
+    // - Admin: được phép cập nhật role
+    // - Moderator: KHÔNG được phép thay đổi role
+    if (req.user?.role === "admin") {
+      if (typeof role !== "undefined") update.role = role;
+    }
 
     const updatedUser = await User.findByIdAndUpdate(id, update, {
-      new: true,           // trả về doc sau cập nhật
-      runValidators: true, // chạy validate của schema
-    }).select("-password"); // ẩn password trong response
+      new: true,
+      runValidators: true,
+    }).select("-password");
 
     if (!updatedUser) {
       return res.status(404).json({ message: "User not found" });
