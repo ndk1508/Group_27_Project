@@ -3,6 +3,7 @@ const router = express.Router();
 const authController = require("../controllers/authController");
 const authMiddleware = require("../middleware/authMiddleware");
 const upload = require("../middleware/upload");
+const { refreshToken } = require('../controllers/authController');
 
 // Đăng ký
 router.post("/signup", authController.signup);
@@ -22,5 +23,7 @@ router.post("/reset-password/:token", authController.resetPassword);
 router.post("/reset-password", authController.resetPassword);
 // Upload avatar (cần đăng nhập)
 router.post("/upload-avatar", authMiddleware, upload.single("avatar"), authController.uploadAvatar);
+
+router.post('/refresh', refreshToken);
 
 module.exports = router;

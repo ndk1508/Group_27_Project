@@ -1,35 +1,29 @@
 const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
-const mongoose = require('mongoose');
+const cookieParser = require('cookie-parser');
+const connectDB = require('./config/db');
 
-// Load environment variables FIRST
+// Load env
 dotenv.config();
-console.log('MONGO_URI =', process.env.MONGO_URI);
+connectDB();
 
-// 🔗 Kết nối MongoDB
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('✅ MongoDB connected successfully'))
-  .catch((err) => console.error('❌ MongoDB connection error:', err));
-
-// Initialize Express
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use(cookieParser());
 
-// Route test nhanh
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok' });
-});
+// ✅ Import routes
+const authRoutes = require('./routes/auth');
+const userRoutes = require('./routes/user');
 
-// Import routes
-const authRoutes = require("./routes/auth");
-const userRoutes = require("./routes/user");
+// ✅ Register routes
+app.use('/api/auth', authRoutes);   // => /api/auth/refresh
+app.use('/', userRoutes);           // => /users
 
-// Register routes
-app.use("/api/auth", authRoutes);
-app.use("/", userRoutes); // => /users
+// Test route
+app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
-// Chạy server
+// ✅ Run server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));

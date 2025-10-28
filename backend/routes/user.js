@@ -3,6 +3,7 @@ const router = express.Router();
 const userController = require("../controllers/userController");
 const authController = require("../controllers/authController");
 const authMiddleware = require("../middleware/authMiddleware");
+const { verifyAccessToken } = require("../middleware/authMiddleware");
 const roleMiddleware = require("../middleware/roleMiddleware");
 const upload = require("../middleware/upload");
 
@@ -23,8 +24,9 @@ router.get("/profile", authMiddleware, userController.getProfile);
 router.put("/profile", authMiddleware, userController.updateProfile);
 
 // Các route /api cho frontend hiện tại (Profile.jsx)
-router.get("/api/profile", authMiddleware, userController.getProfile);
-router.put("/api/profile", authMiddleware, userController.updateProfile);
+// Dùng Access Token (ACCESS_TOKEN_SECRET) cho các route /api/profile
+router.get("/api/profile", verifyAccessToken, userController.getProfile);
+router.put("/api/profile", verifyAccessToken, userController.updateProfile);
 router.post(
 	"/api/profile/upload-avatar",
 	authMiddleware,
