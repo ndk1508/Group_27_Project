@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from "react";
 import api from "../api/axios";
 
-export default function UserList() {
+export default function UserList({ reloadKey }) {
   const [users, setUsers] = useState([]);
 
   useEffect(() => {
     api.get("/users")
       .then(res => setUsers(res.data))
       .catch(err => console.error("Lỗi tải danh sách:", err));
-  }, []);
+  }, [reloadKey]);
 
   return (
     <div>
