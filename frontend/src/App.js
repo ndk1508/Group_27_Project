@@ -1,4 +1,5 @@
 // src/App.js
+
 import React, { useState, useEffect } from "react";
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 import "./App.css";
@@ -122,71 +123,9 @@ function UsersCrud() {
             ))}
           </tbody>
         </table>
+
       </div>
     </div>
   );
 }
 
-// --- App chính ---
-export default function App() {
-  return (
-    <BrowserRouter>
-      <div style={{ padding: 16 }}>
-        {/* Thanh menu điều hướng */}
-        <nav
-          style={{
-            display: "flex",
-            gap: 12,
-            alignItems: "center",
-            marginBottom: 16,
-          }}
-        >
-          <Link to="/">CRUD Users</Link>
-          <Link to="/signup">Đăng ký</Link>
-          <Link to="/login">Đăng nhập</Link>
-
-
-        </nav>
-
-        {/* Định nghĩa các route */}
-        <Routes>
-          {/* Trang CRUD cần đăng nhập */}
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <UsersCrud />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Trang đăng ký / đăng nhập */}
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/login" element={<Login />} />
-
-          {/* Trang chỉ dành cho admin */}
-          <Route
-            path="/admin"
-            element={
-              <AdminRoute>
-                <Admin />
-              </AdminRoute>
-            }
-          />
-
-          {/* Trang hồ sơ cá nhân (profile) */}
-          <Route
-            path="/profile"
-            element={
-              <ProtectedRoute>
-                <Profile />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="/forgot" element={<ForgotPassword />} />
-          <Route path="/reset" element={<ResetPassword />} />
-        </Routes>
-      </div>
-    </BrowserRouter>
-  );
-}

@@ -1,3 +1,4 @@
+
 const express = require("express");
 const router = express.Router();
 const userController = require("../controllers/userController");
@@ -33,5 +34,6 @@ router.post(
 	upload.single("avatar"),
 	authController.uploadAvatar
 );
+
 
 module.exports = router;
