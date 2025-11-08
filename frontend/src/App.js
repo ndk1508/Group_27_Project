@@ -7,10 +7,9 @@ import "./App.css";
 import api from "./api/axios";
 import Signup from "./pages/Signup";
 import Login from "./pages/Login";
-import ProtectedRoute from "./components/ProtectedRoute";
-import Admin from "./pages/Admin";
-import AdminRoute from "./components/AdminRoute";
 import Profile from "./pages/Profile";
+import Unauthorized from "./pages/Unauthorized";
+import { AdminRoute, ModeratorRoute, UserRoute } from "./components/RoleBasedRoute";
 
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
