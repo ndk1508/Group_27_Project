@@ -55,7 +55,27 @@ export function AuthProvider({ children }) {
     } catch (e) {}
   };
 
-  const value = { token, user, login, logout, isAuthenticated: !!token };
+  // Role check helpers
+  const hasRole = (role) => {
+    return user?.role === role;
+  };
+
+  const isAdmin = () => hasRole("admin");
+  const isModerator = () => hasRole("moderator");
+  const isUser = () => hasRole("user");
+
+  const value = { 
+    token, 
+    user, 
+    login, 
+    logout, 
+    isAuthenticated: !!token,
+    isAdmin,
+    isModerator,
+    isUser,
+    hasRole
+  };
+  
   return (
     <>
       {sessionExpired && <SessionExpiredModal onClose={onSessionModalClose} />}
