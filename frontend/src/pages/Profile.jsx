@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import api from "../api/axios";
 
 export default function Profile() {
-  const [user, setUser] = useState({ name: "", email: "", role: "", avatar: { url: "" } });
+  const [user, setUser] = useState({ name: "", email: "", role: "", avatar: "" });
   const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(true);
   const [file, setFile] = useState(null);
@@ -25,7 +25,7 @@ export default function Profile() {
     e.preventDefault();
     try {
       const res = await api.put("/api/profile", { name: user.name, email: user.email });
-      setUser(res.data.user);
+      if (res?.data?.user) setUser(res.data.user);
       setMsg("✅ Cập nhật thành công!");
     } catch (err) {
       setMsg(err?.response?.data?.message || "❌ Cập nhật thất bại!");
@@ -47,7 +47,15 @@ export default function Profile() {
       const res = await api.post("/api/profile/upload-avatar", fd, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      setUser(res.data.user);
+      // Backend có thể chỉ trả về { avatar }, hoặc { message, avatar }, hoặc { user }
+      if (res?.data?.user) {
+        setUser(res.data.user);
+      } else if (res?.data?.avatar) {
+        setUser((prev) => ({ ...prev, avatar: res.data.avatar }));
+      } else {
+        // Fallback: reload profile
+        await loadProfile();
+      }
       setMsg("🖼️ Upload avatar thành công");
       setFile(null);
       setPreview("");
@@ -60,7 +68,8 @@ export default function Profile() {
 
   if (loading) return <p style={{ textAlign: "center" }}>⏳ Đang tải...</p>;
 
-  const avatarUrl = preview || user?.avatar?.url || "https://via.placeholder.com/80x80?text=Avatar";
+  const avatarField = typeof user?.avatar === "string" ? user.avatar : user?.avatar?.url;
+  const avatarUrl = preview || avatarField || "https://via.placeholder.com/80x80?text=Avatar";
 
   return (
     <div className="container" style={{ maxWidth: 720 }}>
@@ -85,8 +94,8 @@ export default function Profile() {
       <div className="form-section">
         <h3>Cập nhật thông tin</h3>
         <form onSubmit={handleUpdate}>
-          <input type="text" placeholder="Họ và tên" value={user.name || ""} onChange={(e) => setUser({ ...user, name: e.target.value })} />
-          <input type="email" placeholder="Email" value={user.email || ""} onChange={(e) => setUser({ ...user, email: e.target.value })} />
+          <input type="text" placeholder="Họ và tên" value={user?.name || ""} onChange={(e) => setUser({ ...user, name: e.target.value })} />
+          <input type="email" placeholder="Email" value={user?.email || ""} onChange={(e) => setUser({ ...user, email: e.target.value })} />
           <button type="submit">Cập nhật</button>
         </form>
       </div>

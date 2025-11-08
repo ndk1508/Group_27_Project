@@ -1,89 +1,71 @@
 // src/App.jsx
 import React from "react";
-import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import "./App.css";
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
-import AuthStatus from "./components/AuthStatus";
 import AdminRoute from "./components/AdminRoute";
 
+import Home from "./pages/Home";
 import Signup from "./pages/Signup";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
 import Admin from "./pages/Admin";
 import Users from "./pages/Users";
-
+import ForgotPasswordNew from "./pages/ForgotPasswordNew";
+import ResetPassword from "./pages/ResetPassword";
 
 export default function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
-        <div style={{ padding: 16 }}>
-          <nav
-            style={{
-              display: "flex",
-              gap: 12,
-              alignItems: "center",
-              marginBottom: 16,
-            }}
-          >
-            <Link to="/">Trang chủ</Link>
-            <Link to="/signup">Đăng ký</Link>
-            <Link to="/login">Đăng nhập</Link>
-            <Link to="/dashboard">Dashboard</Link>
-            <Link to="/users">Users</Link>
-            <Link to="/admin">Admin</Link>
-          </nav>
+      <BrowserRouter future={{ v7_relativeSplatPath: true }}>
+        <Routes>
+          {/* Public routes */}
+          <Route path="/" element={<Home />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/forgot-password" element={<ForgotPasswordNew />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
 
-          {/* Hiển thị trạng thái đăng nhập + token (phục vụ screenshot yêu cầu) */}
-          <AuthStatus />
+          {/* Protected routes */}
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
 
-          <Routes>
-            <Route path="/" element={<div style={{ padding: 12 }}>Home</div>} />
-            <Route path="/signup" element={<Signup />} />
-            <Route path="/login" element={<Login />} />
+          <Route
+            path="/users"
+            element={
+              <ProtectedRoute>
+                <Users />
+              </ProtectedRoute>
+            }
+          />
 
-            {/* Chặn truy cập nếu chưa đăng nhập */}
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              }
-            />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
 
-            {/* CRUD Users (yêu cầu đăng nhập) */}
-            <Route
-              path="/users"
-              element={
-                <ProtectedRoute>
-                  <Users />
-                </ProtectedRoute>
-              }
-            />
-
-            <Route
-              path="/profile"
-              element={
-                <ProtectedRoute>
-                  <Profile />
-                </ProtectedRoute>
-              }
-            />
-
-            {/* Trang quản trị dành cho admin */}
-            <Route
-              path="/admin"
-              element={
-                <AdminRoute>
-                  <Admin />
-                </AdminRoute>
-              }
-            />
-          </Routes>
-        </div>
+          {/* Admin only */}
+          <Route
+            path="/admin"
+            element={
+              <AdminRoute>
+                <Admin />
+              </AdminRoute>
+            }
+          />
+        </Routes>
       </BrowserRouter>
     </AuthProvider>
   );

@@ -102,13 +102,25 @@ exports.getProfile = async (req, res) => {
 // Cập nhật thông tin cá nhân
 exports.updateProfile = async (req, res) => {
   try {
-    const { name, avatar, password } = req.body;
+    const { name, email, avatar, password } = req.body;
 
     const user = await User.findById(req.user._id);
     if (!user) return res.status(404).json({ message: "Không tìm thấy người dùng" });
 
     // Cập nhật thông tin
     if (name) user.name = name;
+    // Cho phép cập nhật email nếu hợp lệ và không trùng
+    if (typeof email !== 'undefined' && email !== user.email) {
+      const emailRegex = /\S+@\S+\.\S+/;
+      if (!emailRegex.test(email || "")) {
+        return res.status(400).json({ message: "Email không hợp lệ" });
+      }
+      const exists = await User.findOne({ email });
+      if (exists && exists._id.toString() !== user._id.toString()) {
+        return res.status(409).json({ message: "Email đã tồn tại" });
+      }
+      user.email = email;
+    }
     if (avatar) user.avatar = avatar;
 
     // Nếu có đổi mật khẩu thì mã hóa lại
@@ -119,7 +131,10 @@ exports.updateProfile = async (req, res) => {
 
     await user.save();
 
-    res.json({ message: "Cập nhật thành công", user });
+    // Ẩn mật khẩu khi trả về
+    const safeUser = user.toObject();
+    delete safeUser.password;
+    res.json({ message: "Cập nhật thành công", user: safeUser });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

@@ -22,11 +22,35 @@ exports.signup = async (req, res) => {
     if (existingUser)
       return res.status(400).json({ message: "Email đã tồn tại" });
 
+    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = new User({ name, email, password: hashedPassword });
+
+    // Nếu có file avatar khi đăng ký, upload lên Cloudinary
+    let avatarUrl = "";
+    if (req.file) {
+      try {
+        const result = await new Promise((resolve, reject) => {
+          const stream = cloudinary.uploader.upload_stream(
+            { folder: "avatars" },
+            (error, result) => {
+              if (error) return reject(error);
+              resolve(result);
+            }
+          );
+          stream.end(req.file.buffer);
+        });
+        avatarUrl = result.secure_url || "";
+      } catch (uploadErr) {
+        return res.status(500).json({ message: "Lỗi upload ảnh đại diện", error: uploadErr.message });
+      }
+    }
+
+    const newUser = new User({ name, email, password: hashedPassword, avatar: avatarUrl });
     await newUser.save();
 
-    res.status(201).json({ message: "Đăng ký thành công", user: newUser });
+    // Trả về user đã được lược bỏ password
+    const { password: _pw, ...safeUser } = newUser.toObject();
+    res.status(201).json({ message: "Đăng ký thành công", user: safeUser });
   } catch (err) {
     res.status(500).json({ message: "Lỗi server", error: err.message });
   }

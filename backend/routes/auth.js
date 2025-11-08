@@ -5,8 +5,8 @@ const authMiddleware = require("../middleware/authMiddleware");
 const upload = require("../middleware/upload");
 const { refreshToken } = require('../controllers/authController');
 
-// Đăng ký
-router.post("/signup", authController.signup);
+// Đăng ký (hỗ trợ upload avatar tùy chọn)
+router.post("/signup", upload.single("avatar"), authController.signup);
 
 // Đăng nhập
 router.post("/login", authController.login);
