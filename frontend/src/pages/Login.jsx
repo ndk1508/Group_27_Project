@@ -21,16 +21,16 @@ export default function Login() {
       const res = await api.post("/api/auth/login", { email, password });
       const { accessToken, refreshToken, user, message, token: legacyToken } = res.data || {};
       const effectiveToken = accessToken || legacyToken;
-      
+
       if (!effectiveToken || !user) {
         setMsg("Không nhận được token");
         setMsgType("error");
         return;
       }
 
-      // Lưu vào AuthContext + localStorage
-      setAuth(effectiveToken, user);
-      if (refreshToken) localStorage.setItem("refreshToken", refreshToken);
+      // Lưu vào AuthContext + tokenService (lưu refresh token nếu có)
+      // setAuth signature: login(accessToken, userObj, refreshToken?)
+      setAuth(effectiveToken, user, refreshToken);
       
       setMsg(message || "Đăng nhập thành công!");
       setMsgType("success");

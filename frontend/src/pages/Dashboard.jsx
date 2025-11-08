@@ -12,6 +12,7 @@ export default function Dashboard() {
   const [form, setForm] = useState({ name: "", email: "", role: "user" });
   const [editingId, setEditingId] = useState(null);
   const [msg, setMsg] = useState("");
+  const [testResult, setTestResult] = useState("");
 
   useEffect(() => {
     loadUsers();
@@ -76,6 +77,19 @@ export default function Dashboard() {
     navigate("/login");
   };
 
+  // Test refresh flow: gọi route /api/profile (yêu cầu access token)
+  const handleTestRefresh = async () => {
+    setTestResult("Đang gọi /api/profile ...");
+    try {
+      const res = await api.get("/api/profile");
+      setTestResult("Thành công: " + JSON.stringify(res.data));
+    } catch (err) {
+      const message = err?.response?.data?.message || err.message || "Lỗi";
+      setTestResult("Lỗi: " + message);
+    }
+    setTimeout(() => setTestResult(""), 8000);
+  };
+
   return (
     <div className="dashboard-container">
       <div className="dashboard-header">
@@ -109,11 +123,31 @@ export default function Dashboard() {
           >
             Cập nhật avatar
           </Link>
+          <button
+            onClick={handleTestRefresh}
+            style={{
+              padding: "10px 14px",
+              background: "#10b981",
+              color: "#fff",
+              borderRadius: 8,
+              border: "none",
+              cursor: "pointer",
+              fontWeight: 600,
+            }}
+          >
+            Test Refresh
+          </button>
           <button className="btn-logout" onClick={handleLogout}>
             Đăng xuất
           </button>
         </div>
       </div>
+
+      {testResult && (
+        <div style={{ padding: 12, margin: "12px 0", background: "#f1f5f9", borderRadius: 8 }}>
+          <strong>Test result:</strong> {testResult}
+        </div>
+      )}
 
       <div className="dashboard-content">
         <h2 className="section-title">Quản lý người dùng</h2>

@@ -13,8 +13,11 @@ export default function LoginForm() {
     e.preventDefault();
     try {
       setLoading(true);
-      const res = await api.post("/login", form); // backend trả {token}
-      login(res.data.token);
+  const res = await api.post("/login", form); // backend trả {token}
+  // If backend returns refreshToken and user, pass through; otherwise use legacy token
+  const { accessToken, refreshToken, user, token: legacyToken } = res.data || {};
+  const effectiveToken = accessToken || legacyToken;
+  login(effectiveToken, user, refreshToken);
       alert("Đăng nhập thành công!");
     } catch (err) {
       console.error(err);
