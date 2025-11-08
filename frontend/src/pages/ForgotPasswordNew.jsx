@@ -45,6 +45,14 @@ export default function ForgotPasswordNew() {
           </div>
         )}
 
+        {msgType === 'success' && (
+          <div style={{ marginTop: 8, fontSize: 13, color: '#4a5568' }}>
+            <p>Link reset sẽ có dạng:</p>
+            <code style={{ background: '#f7fafc', padding: '4px 8px', display: 'inline-block' }}>{window.location.origin}/reset-password/&lt;token&gt;</code>
+            <p style={{ marginTop: 6 }}>Kiểm tra cả hộp thư rác (spam) nếu không thấy email.</p>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label className="form-label">Email</label>
