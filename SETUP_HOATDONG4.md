@@ -9,6 +9,8 @@ Mở file `backend/.env` và thêm các dòng sau:
 EMAIL_USER=your-email@gmail.com
 EMAIL_PASS=your-app-password
 EMAIL_FROM_NAME=Group 27 Project
+# Optional: set to 'gmail' to use Gmail SMTP helper in sendEmail.js
+EMAIL_SERVICE=gmail
 
 # Cloudinary configuration
 CLOUDINARY_CLOUD_NAME=your-cloud-name
@@ -141,6 +143,8 @@ npm run dev
 }
 ```
 - Kiểm tra email để lấy token
+
+Note: If you configured Gmail and used an App Password, the email should be delivered to the recipient's Gmail inbox (or Promotions/Spam). If you don't get email, check backend logs for errors and ensure EMAIL_USER / EMAIL_PASS are correct.
 
 ### 2. Reset Password
 - Method: POST
