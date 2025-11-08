@@ -149,6 +149,23 @@ exports.getAllUsers = async (req, res) => {
   }
 };
 
+// Lấy activity logs (Admin)
+exports.getActivityLogs = async (req, res) => {
+  try {
+    const ActivityLog = require('../models/ActivityLog');
+    // support basic query params: userId, action, limit, skip
+    const { userId, action, limit = 100, skip = 0 } = req.query;
+    const filter = {};
+    if (userId) filter.userId = userId;
+    if (action) filter.action = action;
+
+    const logs = await ActivityLog.find(filter).sort({ createdAt: -1 }).limit(Number(limit)).skip(Number(skip));
+    res.json({ count: logs.length, logs });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 // Xóa user (Admin hoặc chính chủ)
 exports.deleteUser = async (req, res) => {
   try {

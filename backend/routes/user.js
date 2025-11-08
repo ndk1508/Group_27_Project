@@ -11,6 +11,8 @@ const upload = require("../middleware/upload");
 // Admin & Moderator routes (đặt TRƯỚC public routes)
 router.get("/admin/users", verifyAccessToken, roleMiddleware(["admin", "moderator"]), userController.getAllUsers);
 router.delete("/admin/users/:id", verifyAccessToken, roleMiddleware(["admin"]), userController.deleteUser);
+// Admin: xem activity logs
+router.get('/admin/logs', verifyAccessToken, roleMiddleware(['admin']), userController.getActivityLogs);
 
 // Public user routes
 router.get("/users", userController.getUsers);

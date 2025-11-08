@@ -6,6 +6,7 @@ const sendEmail = require("../utils/sendEmail");
 const cloudinary = require("../utils/cloudinary");
 const multer = require("multer");
 const RefreshToken = require('../models/RefreshToken'); // SV3 tạo schema này
+const { logActivity } = require('../utils/activityLogger');
 
 // Multer để nhận file upload
 const storage = multer.memoryStorage();
@@ -65,11 +66,19 @@ exports.login = async (req, res) => {
 
     const user = await User.findOne({ email });
     if (!user)
-      return res.status(400).json({ message: "Email không tồn tại" });
+      {
+        // Log failed login attempt (unknown user)
+        await logActivity({ action: 'login_failed', ip: req.ip, meta: { email } });
+        return res.status(400).json({ message: "Email không tồn tại" });
+      }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch)
-      return res.status(400).json({ message: "Sai mật khẩu" });
+      {
+        // Log failed login attempt
+        await logActivity({ userId: user._id, action: 'login_failed', ip: req.ip, meta: { email } });
+        return res.status(400).json({ message: "Sai mật khẩu" });
+      }
 
     // Tạo access token và refresh token
     const tokens = generateTokens(user);
@@ -81,6 +90,9 @@ exports.login = async (req, res) => {
       userId: user._id,
       expiresAt: expiresAt
     });
+
+    // Log successful login
+    await logActivity({ userId: user._id, action: 'login_success', ip: req.ip, meta: { email: user.email } });
 
     res.json({ 
       message: "Đăng nhập thành công", 
