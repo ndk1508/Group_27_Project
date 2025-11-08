@@ -46,6 +46,15 @@ export function AuthProvider({ children }) {
     localStorage.removeItem("user");
   };
 
+  // Allow updating user object from child components (e.g. after avatar upload)
+  const updateUser = (patchOrUser) => {
+    if (typeof patchOrUser === "function") {
+      setUser((prev) => ({ ...prev, ...patchOrUser(prev) }));
+    } else if (typeof patchOrUser === "object") {
+      setUser((prev) => ({ ...prev, ...patchOrUser }));
+    }
+  };
+
   const onSessionModalClose = () => {
     setSessionExpired(false);
     // ensure tokens cleared and redirect to login
@@ -69,6 +78,7 @@ export function AuthProvider({ children }) {
     user, 
     login, 
     logout, 
+    updateUser,
     isAuthenticated: !!token,
     isAdmin,
     isModerator,
