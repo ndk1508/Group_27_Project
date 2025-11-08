@@ -152,6 +152,16 @@ exports.forgotPassword = async (req, res) => {
     res.json({ message: "Token reset đã gửi qua email", token: resetTokenRaw });
   } catch (error) {
     console.error("forgotPassword error:", error);
+    // If sending email failed, remove token from user for safety
+    try {
+      if (typeof user !== 'undefined' && user) {
+        user.resetPasswordToken = undefined;
+        user.resetPasswordExpire = undefined;
+        await user.save();
+      }
+    } catch (e) {
+      console.error('Failed to cleanup reset token after email error:', e);
+    }
     res.status(500).json({ error: error.message });
   }
 };

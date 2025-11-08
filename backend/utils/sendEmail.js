@@ -1,4 +1,4 @@
-const nodemailer = require("nodemailer");
+﻿const nodemailer = require("nodemailer");
 
 /**
  * sendEmail options:
@@ -7,14 +7,23 @@ const nodemailer = require("nodemailer");
  * - If EMAIL_SERVICE === 'gmail' it will use Gmail SMTP with EMAIL_USER and EMAIL_PASS (app password recommended).
  * - Otherwise it will use EMAIL_HOST / EMAIL_PORT and EMAIL_USER / EMAIL_PASS.
  */
-const nodemailer = require("nodemailer");
-
 const sendEmail = async (options) => {
+  // basic validation: require recipient and subject
+  if (!options || !options.email) {
+    throw new Error("sendEmail: missing options.email");
+  }
+
+  // ensure auth credentials exist when required
+  const service = (process.env.EMAIL_SERVICE || "").toLowerCase();
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    // If no credentials provided, throw a helpful error so caller can handle it
+    throw new Error("Email credentials not configured. Set EMAIL_USER and EMAIL_PASS (or configure EMAIL_HOST/EMAIL_PORT). For Gmail use EMAIL_SERVICE=gmail and an App Password.");
+  }
+
   // choose transporter configuration
   let transporterConfig = null;
 
-  if ((process.env.EMAIL_SERVICE || "").toLowerCase() === "gmail") {
-    // Using Gmail SMTP (recommended: use an App Password when 2FA is enabled)
+  if (service === "gmail") {
     transporterConfig = {
       service: "gmail",
       auth: {
@@ -37,21 +46,15 @@ const sendEmail = async (options) => {
   const transporter = nodemailer.createTransport(transporterConfig);
 
   const mailOptions = {
-    from: '"Cooking Note App" <no-reply@cookingnote.dev>',
+    from: process.env.EMAIL_FROM || '"No Reply" <no-reply@example.com>',
     to: options.email,
-    subject: options.subject,
-    text: options.message,
-    // allow HTML if provided
+    subject: options.subject || "No subject",
+    text: options.message || "",
     html: options.html || undefined,
   };
 
-  await transporter.sendMail(mailOptions);
-  
-  if ((process.env.EMAIL_SERVICE || "").toLowerCase() === "gmail") {
-    console.log("✅ Email sent via Gmail SMTP to:", options.email);
-  } else {
-    console.log("✅ Email sent (host:", transporterConfig.host + ") to:", options.email);
-  }
+  // send mail and return transporter response
+  return transporter.sendMail(mailOptions);
 };
 
 module.exports = sendEmail;
