@@ -1,41 +1,67 @@
 // src/context/AuthContext.jsx
 import React, { createContext, useContext, useEffect, useState } from "react";
+import tokenService from "../utils/tokenService";
+import SessionExpiredModal from "../components/SessionExpiredModal";
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [token, setToken] = useState(() => localStorage.getItem("token") || "");
+  const [token, setToken] = useState(() => tokenService.getToken() || "");
   const [user, setUser] = useState(() => {
     const raw = localStorage.getItem("user");
     return raw ? JSON.parse(raw) : null;
   });
+  const [sessionExpired, setSessionExpired] = useState(false);
 
-  // đồng bộ Local Storage
+  // subscribe to token changes from tokenService (e.g. axios refresh)
   useEffect(() => {
-    if (token) localStorage.setItem("token", token);
-    else localStorage.removeItem("token");
-  }, [token]);
+    const unsub = tokenService.subscribe((t) => setToken(t || ""));
+    return unsub;
+  }, []);
+
+  // subscribe to session-expired notifications from tokenService
+  useEffect(() => {
+    const unsub = tokenService.onSessionExpired(() => {
+      setSessionExpired(true);
+    });
+    return unsub;
+  }, []);
 
   useEffect(() => {
     if (user) localStorage.setItem("user", JSON.stringify(user));
     else localStorage.removeItem("user");
   }, [user]);
 
-  const login = (jwt, userObj) => {
-    setToken(jwt);
-    setUser(userObj);
+  // login accepts access token, user object, and optional refresh token
+  const login = (accessToken, userObj, refreshToken) => {
+    tokenService.setToken(accessToken || "");
+    if (refreshToken) tokenService.setRefreshToken(refreshToken);
+    setUser(userObj || null);
   };
 
   const logout = () => {
-    setToken("");
+    tokenService.clearTokens();
     setUser(null);
-    // Xóa token phía client (yêu cầu đề bài)
-    localStorage.removeItem("token");
+    // Also remove user from storage
     localStorage.removeItem("user");
   };
 
+  const onSessionModalClose = () => {
+    setSessionExpired(false);
+    // ensure tokens cleared and redirect to login
+    logout();
+    try {
+      if (typeof window !== "undefined") window.location.href = "/login";
+    } catch (e) {}
+  };
+
   const value = { token, user, login, logout, isAuthenticated: !!token };
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <>
+      {sessionExpired && <SessionExpiredModal onClose={onSessionModalClose} />}
+      <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+    </>
+  );
 }
 
 export function useAuth() {
