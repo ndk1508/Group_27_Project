@@ -3,13 +3,14 @@ const router = express.Router();
 const authController = require("../controllers/authController");
 const authMiddleware = require("../middleware/authMiddleware");
 const upload = require("../middleware/upload");
+const loginRateLimiter = require("../middleware/loginRateLimiter")();
 const { refreshToken } = require('../controllers/authController');
 
 // Đăng ký (hỗ trợ upload avatar tùy chọn)
 router.post("/signup", upload.single("avatar"), authController.signup);
 
-// Đăng nhập
-router.post("/login", authController.login);
+// Đăng nhập (rate-limited)
+router.post("/login", loginRateLimiter, authController.login);
 
 // Đăng xuất
 router.post("/logout", authController.logout);
