@@ -192,3 +192,22 @@ Note: If you configured Gmail and used an App Password, the email should be deli
 ❌ backend/controllers/authController.js (thêm 3 functions mới)
 ❌ backend/routes/auth.js (thêm 3 routes mới)
 ❌ .gitignore (thêm backend/uploads/)
+
+---
+
+## GHI CHÚ QUAN TRỌNG (TIẾNG VIỆT)
+
+- Không commit file `backend/.env` chứa thông tin nhạy cảm (API keys, mật khẩu email). Sử dụng `backend/.env.example` làm mẫu và cho đồng đội biết những biến cần cấu hình.
+- Nếu dùng Gmail: bắt buộc bật 2-Step Verification và tạo "App Password" (https://myaccount.google.com/apppasswords). Dùng App Password làm `EMAIL_PASS`.
+- Trong môi trường phát triển (NODE_ENV !== 'production') API `/forgot-password` sẽ trả về token raw trong response để tiện test — tính năng này chỉ dành cho dev. Khi đưa lên production, KHÔNG trả token raw trong response.
+- Nếu gửi email thất bại, server sẽ xoá token reset khỏi database để tránh để lại token hợp lệ mà người dùng không nhận được email.
+
+---
+
+Hướng dẫn tạo Gmail App Password (tóm tắt):
+1. Vào https://myaccount.google.com/security
+2. Bật "2-Step Verification" (nếu chưa bật)
+3. Trong mục "App passwords", chọn "Select app" → "Other (Custom name)", đặt tên (ví dụ: "NodeJS Reset Password"), rồi nhấn "Generate".
+4. Copy password 16 ký tự và paste vào `backend/.env` tại `EMAIL_PASS`.
+
+Nếu muốn dùng Mailtrap cho dev, đăng nhập Mailtrap, lấy `SMTP credentials` và điền vào `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_USER`, `EMAIL_PASS`.
