@@ -32,6 +32,35 @@ export default function Profile() {
     }
   };
 
+  // Resize image to specified width/height and return a Blob (center-cropped)
+  const resizeImage = (file, width = 300, height = 300) => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+
+        const iw = img.width;
+        const ih = img.height;
+        // scale to cover
+        const ratio = Math.max(width / iw, height / ih);
+        const sw = Math.round(width / ratio);
+        const sh = Math.round(height / ratio);
+        const sx = Math.round((iw - sw) / 2);
+        const sy = Math.round((ih - sh) / 2);
+
+        ctx.drawImage(img, sx, sy, sw, sh, 0, 0, width, height);
+        canvas.toBlob((blob) => {
+          resolve(blob);
+        }, "image/jpeg", 0.85);
+      };
+      img.onerror = () => resolve(null);
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
   const handleFile = (e) => {
     const f = e.target.files?.[0];
     setFile(f || null);
@@ -42,20 +71,27 @@ export default function Profile() {
     e.preventDefault();
     if (!file) return setMsg("Chưa chọn ảnh");
     try {
+      setMsg("Đang xử lý ảnh...");
+      // Resize on client before upload
+      const blob = await resizeImage(file, 300, 300);
+      if (!blob) return setMsg("Không thể xử lý ảnh");
+
       const fd = new FormData();
-      fd.append("avatar", file);
+      // give a filename so backend/multer has one
+      fd.append("avatar", blob, "avatar.jpg");
+
       const res = await api.post("/api/profile/upload-avatar", fd, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      // Backend có thể chỉ trả về { avatar }, hoặc { message, avatar }, hoặc { user }
+
       if (res?.data?.user) {
         setUser(res.data.user);
       } else if (res?.data?.avatar) {
         setUser((prev) => ({ ...prev, avatar: res.data.avatar }));
       } else {
-        // Fallback: reload profile
         await loadProfile();
       }
+
       setMsg("🖼️ Upload avatar thành công");
       setFile(null);
       setPreview("");
