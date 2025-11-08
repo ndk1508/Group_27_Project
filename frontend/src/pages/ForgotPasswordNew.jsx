@@ -1,11 +1,10 @@
 // src/pages/ForgotPasswordNew.jsx
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import api from "../api/axios";
 import "../styles/Auth.css";
 
 export default function ForgotPasswordNew() {
-  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [msg, setMsg] = useState("");
   const [msgType, setMsgType] = useState("");
