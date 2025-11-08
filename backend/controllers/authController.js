@@ -126,24 +126,42 @@ exports.forgotPassword = async (req, res) => {
 
     if (!user) return res.status(404).json({ message: "User không tồn tại" });
 
-    const resetToken = crypto.randomBytes(32).toString("hex");
+    // Tạo token raw gửi qua email, nhưng lưu hash vào DB
+    const resetTokenRaw = crypto.randomBytes(32).toString("hex");
+    const resetTokenHash = crypto.createHash("sha256").update(resetTokenRaw).digest("hex");
     const resetExpire = Date.now() + 10 * 60 * 1000; // 10 phút
 
-    user.resetPasswordToken = resetToken;
+    user.resetPasswordToken = resetTokenHash;
     user.resetPasswordExpire = resetExpire;
     await user.save();
 
-    const resetURL = `http://localhost:3000/reset-password/${resetToken}`;
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+    const resetURL = `${frontendUrl}/reset-password/${resetTokenRaw}`;
+
     const message = `Bạn nhận được yêu cầu đặt lại mật khẩu.\nLink reset: ${resetURL}`;
 
+    // Send both plain text and simple HTML version
     await sendEmail({
       email: user.email,
       subject: "Yêu cầu đặt lại mật khẩu",
       message,
+      html: `<p>Bạn nhận được yêu cầu đặt lại mật khẩu.</p><p>Nhấn vào <a href="${resetURL}">đây</a> để đặt lại mật khẩu.</p><p>Nếu không phải bạn, bỏ qua email này.</p>`,
     });
 
-    res.json({ message: "Token reset đã gửi qua email", token: resetToken });
+    // For safety, do not return token in production; keep for testing only
+    res.json({ message: "Token reset đã gửi qua email", token: resetTokenRaw });
   } catch (error) {
+    console.error("forgotPassword error:", error);
+    // If sending email failed, remove token from user for safety
+    try {
+      if (typeof user !== 'undefined' && user) {
+        user.resetPasswordToken = undefined;
+        user.resetPasswordExpire = undefined;
+        await user.save();
+      }
+    } catch (e) {
+      console.error('Failed to cleanup reset token after email error:', e);
+    }
     res.status(500).json({ error: error.message });
   }
 };
@@ -154,15 +172,18 @@ exports.forgotPassword = async (req, res) => {
 exports.resetPassword = async (req, res) => {
   try {
     // Nhận token từ params HOẶC body để tương thích cả Postman và frontend
-    const token = req.params.token || req.body.token;
+    const tokenRaw = req.params.token || req.body.token;
     const { newPassword } = req.body;
 
-    if (!token) {
+    if (!tokenRaw) {
       return res.status(400).json({ message: "Thiếu token reset" });
     }
 
+    // Hash token trước khi so sánh với DB
+    const tokenHash = crypto.createHash("sha256").update(tokenRaw).digest("hex");
+
     const user = await User.findOne({
-      resetPasswordToken: token,
+      resetPasswordToken: tokenHash,
       resetPasswordExpire: { $gt: Date.now() },
     });
 
@@ -178,6 +199,7 @@ exports.resetPassword = async (req, res) => {
 
     res.json({ message: "Đổi mật khẩu thành công" });
   } catch (error) {
+    console.error("resetPassword error:", error);
     res.status(500).json({ error: error.message });
   }
 };

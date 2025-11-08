@@ -1,6 +1,8 @@
 // src/pages/Profile.jsx
 import React, { useEffect, useState } from "react";
 import api from "../api/axios";
+import { useAuth } from "../context/AuthContext";
+import resizeImage from "../utils/imageUtils";
 
 export default function Profile() {
   const [user, setUser] = useState({ name: "", email: "", role: "", avatar: "" });
@@ -8,6 +10,8 @@ export default function Profile() {
   const [loading, setLoading] = useState(true);
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const [uploadController, setUploadController] = useState(null);
 
   const loadProfile = async () => {
     try {
@@ -32,6 +36,8 @@ export default function Profile() {
     }
   };
 
+  const { updateUser } = useAuth();
+
   const handleFile = (e) => {
     const f = e.target.files?.[0];
     setFile(f || null);
@@ -42,26 +48,59 @@ export default function Profile() {
     e.preventDefault();
     if (!file) return setMsg("Chưa chọn ảnh");
     try {
+      setMsg("Đang xử lý ảnh...");
+      setUploading(true);
+      // prepare abort controller for upload
+      const controller = new AbortController();
+      setUploadController(controller);
+      // Resize on client before upload
+      const blob = await resizeImage(file, 300, 300);
+      if (!blob) return setMsg("Không thể xử lý ảnh");
+
       const fd = new FormData();
-      fd.append("avatar", file);
+      // give a filename so backend/multer has one
+      fd.append("avatar", blob, "avatar.jpg");
+
       const res = await api.post("/api/profile/upload-avatar", fd, {
         headers: { "Content-Type": "multipart/form-data" },
+        signal: controller.signal
       });
-      // Backend có thể chỉ trả về { avatar }, hoặc { message, avatar }, hoặc { user }
+
       if (res?.data?.user) {
         setUser(res.data.user);
       } else if (res?.data?.avatar) {
         setUser((prev) => ({ ...prev, avatar: res.data.avatar }));
       } else {
-        // Fallback: reload profile
         await loadProfile();
       }
+
       setMsg("🖼️ Upload avatar thành công");
       setFile(null);
       setPreview("");
+      // update global user so header/nav sees new avatar
+      try { updateUser({ avatar: res?.data?.avatar || (res?.data?.user && res.data.user.avatar) }); } catch (e) {}
     } catch (e) {
-      setMsg(e?.response?.data?.message || "Upload thất bại");
+      if (e?.name === 'CanceledError' || e?.message === 'canceled') {
+        setMsg('Upload đã bị hủy');
+      } else {
+        setMsg(e?.response?.data?.message || 'Upload thất bại');
+      }
     }
+    finally {
+      setUploading(false);
+      setUploadController(null);
+    }
+  };
+
+  const cancelUpload = () => {
+    if (uploadController) {
+      try { uploadController.abort(); } catch (e) {}
+    }
+    setUploading(false);
+    setUploadController(null);
+    setFile(null);
+    setPreview("");
+    setMsg('Upload đã được hủy');
   };
 
   useEffect(() => { loadProfile(); }, []);
@@ -104,8 +143,15 @@ export default function Profile() {
       <div className="form-section">
         <h3>Upload Avatar</h3>
         <form onSubmit={uploadAvatar}>
-          <input type="file" accept="image/*" onChange={handleFile} />
-          <button type="submit" disabled={!file}>Tải ảnh lên</button>
+          <input type="file" accept="image/*" onChange={handleFile} disabled={uploading} />
+          <button type="submit" disabled={!file || uploading}>
+            {uploading ? 'Đang tải...' : 'Tải ảnh lên'}
+          </button>
+          {uploading && (
+            <button type="button" onClick={cancelUpload} style={{ marginLeft: 8 }}>
+              Huỷ
+            </button>
+          )}
         </form>
       </div>
 
