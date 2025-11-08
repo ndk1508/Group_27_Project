@@ -148,8 +148,12 @@ exports.forgotPassword = async (req, res) => {
       html: `<p>Bạn nhận được yêu cầu đặt lại mật khẩu.</p><p>Nhấn vào <a href="${resetURL}">đây</a> để đặt lại mật khẩu.</p><p>Nếu không phải bạn, bỏ qua email này.</p>`,
     });
 
-    // For safety, do not return token in production; keep for testing only
-    res.json({ message: "Token reset đã gửi qua email", token: resetTokenRaw });
+    // For safety, return raw token only in non-production to help testing.
+    if ((process.env.NODE_ENV || 'development') !== 'production') {
+      return res.json({ message: "Token reset đã gửi qua email", token: resetTokenRaw });
+    }
+
+    res.json({ message: "Token reset đã gửi qua email" });
   } catch (error) {
     console.error("forgotPassword error:", error);
     // If sending email failed, remove token from user for safety
