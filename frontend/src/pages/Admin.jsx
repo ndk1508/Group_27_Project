@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
+import ActivityLogs from "../components/ActivityLogs";
 
 export default function Admin() {
   const [users, setUsers] = useState([]);
@@ -67,6 +68,10 @@ export default function Admin() {
 
   return (
     <div className="container" style={{ maxWidth: 900 }}>
+      <div style={{ marginBottom: 30 }}>
+        <ActivityLogs />
+      </div>
+      
       <div
         style={{
           background: "#fff",
