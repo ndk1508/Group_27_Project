@@ -1,11 +1,12 @@
 const express = require('express');
 const dotenv = require('dotenv');
+const path = require('path');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const connectDB = require('./config/db');
 
-// Load env
-dotenv.config();
+// Load env (explicit path to backend/.env so server works when started from repo root)
+dotenv.config({ path: path.join(__dirname, '.env') });
 connectDB();
 
 const app = express();
