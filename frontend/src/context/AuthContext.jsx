@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import tokenService from "../utils/tokenService";
 import SessionExpiredModal from "../components/SessionExpiredModal";
+import axios from "axios";
 
 const AuthContext = createContext(null);
 
@@ -17,6 +18,35 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const unsub = tokenService.subscribe((t) => setToken(t || ""));
     return unsub;
+  }, []);
+
+  // On mount try a silent refresh if we have a refresh token but no access token
+  useEffect(() => {
+    let mounted = true;
+    const tryRefresh = async () => {
+      try {
+        const rt = tokenService.getRefreshToken();
+        const current = tokenService.getToken();
+        if (!current && rt) {
+          // call refresh endpoint directly (avoid using api instance to prevent interceptor loops)
+          const resp = await axios.post("http://localhost:3000/api/auth/refresh", { refreshToken: rt });
+          const newAccess = resp.data?.accessToken || resp.data?.token;
+          const newRefresh = resp.data?.refreshToken;
+          if (mounted && newAccess) {
+            tokenService.setToken(newAccess);
+            if (newRefresh) tokenService.setRefreshToken(newRefresh);
+            setToken(newAccess);
+          }
+        }
+      } catch (e) {
+        // refresh failed -> clear tokens and notify session expired
+        tokenService.clearTokens();
+        tokenService.notifySessionExpired();
+      }
+    };
+
+    tryRefresh();
+    return () => { mounted = false; };
   }, []);
 
   // subscribe to session-expired notifications from tokenService
