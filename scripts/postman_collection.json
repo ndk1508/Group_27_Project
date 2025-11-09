@@ -1,0 +1,137 @@
+{
+  "info": {
+    "name": "Group_27_Project - Activity & Auth Tests",
+    "_postman_id": "00000000-0000-0000-0000-000000000000",
+    "description": "Collection to test signup, login, refresh, upload avatar, forgot/reset password, and admin logs.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Signup - Create Test User",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"{{test_user_email}}\",\n  \"password\": \"{{test_user_password}}\"\n}"
+        },
+        "url": { "raw": "{{base_url}}/api/auth/signup", "host": ["{{base_url}}"], "path": ["api","auth","signup"] }
+      },
+      "response": []
+    },
+    {
+      "name": "Login - Wrong Password (for rate limit)",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{test_user_email}}\",\n  \"password\": \"wrongpassword\"\n}" },
+        "url": { "raw": "{{base_url}}/api/auth/login", "host": ["{{base_url}}"], "path": ["api","auth","login"] }
+      }
+    },
+    {
+      "name": "Login - Correct Password",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{test_user_email}}\",\n  \"password\": \"{{test_user_password}}\"\n}" },
+        "url": { "raw": "{{base_url}}/api/auth/login", "host": ["{{base_url}}"], "path": ["api","auth","login"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Save access & refresh tokens to environment variables",
+              "var json = pm.response.json();",
+              "if (json.accessToken) pm.environment.set('access_token', json.accessToken);",
+              "if (json.refreshToken) pm.environment.set('refresh_token', json.refreshToken);",
+              "console.log('Saved access_token, refresh_token');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Refresh Token",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "body": { "mode": "raw", "raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}" },
+        "url": { "raw": "{{base_url}}/api/auth/refresh", "host": ["{{base_url}}"], "path": ["api","auth","refresh"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": { "exec": ["var json = pm.response.json(); if (json.accessToken) pm.environment.set('access_token', json.accessToken); if (json.refreshToken) pm.environment.set('refresh_token', json.refreshToken);"], "type": "text/javascript" }
+        }
+      ]
+    },
+    {
+      "name": "Upload Avatar (multipart)",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Authorization", "value": "Bearer {{access_token}}" } ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            { "key": "avatar", "type": "file", "src": "{{avatar_file_path}}" }
+          ]
+        },
+        "url": { "raw": "{{base_url}}/api/auth/upload-avatar", "host": ["{{base_url}}"], "path": ["api","auth","upload-avatar"] }
+      }
+    },
+    {
+      "name": "Forgot Password",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{test_user_email}}\"\n}" },
+        "url": { "raw": "{{base_url}}/api/auth/forgot-password", "host": ["{{base_url}}"], "path": ["api","auth","forgot-password"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// If server returns token in dev, save it",
+              "try { var json = pm.response.json(); if (json.token) pm.environment.set('raw_reset_token', json.token); } catch(e) {}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reset Password (body)",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "body": { "mode": "raw", "raw": "{\n  \"token\": \"{{raw_reset_token}}\",\n  \"newPassword\": \"{{new_password}}\"\n}" },
+        "url": { "raw": "{{base_url}}/api/auth/reset-password", "host": ["{{base_url}}"], "path": ["api","auth","reset-password"] }
+      }
+    },
+    {
+      "name": "Admin: Get Activity Logs",
+      "request": {
+        "method": "GET",
+        "header": [ { "key": "Authorization", "value": "Bearer {{admin_access_token}}" } ],
+        "url": { "raw": "{{base_url}}/admin/logs?limit=50", "host": ["{{base_url}}"], "path": ["admin","logs"], "query": [ { "key": "limit", "value": "50" } ] }
+      }
+    }
+  ],
+  "event": [],
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:3000" },
+    { "key": "test_user_email", "value": "test.user@example.com" },
+    { "key": "test_user_password", "value": "TestPass123!" },
+    { "key": "new_password", "value": "NewPass123!" },
+    { "key": "avatar_file_path", "value": "D:/Group_27_Project/backend/tests/test-avatar.jpg" },
+    { "key": "access_token", "value": "" },
+    { "key": "refresh_token", "value": "" },
+    { "key": "raw_reset_token", "value": "" },
+    { "key": "admin_access_token", "value": "" }
+  ]
+}

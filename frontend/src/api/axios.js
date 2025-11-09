@@ -33,8 +33,9 @@ api.interceptors.response.use(
     const originalRequest = error.config;
     if (!originalRequest) return Promise.reject(error);
 
-    // If 401 and we haven't retried this request yet
-    if (error.response && error.response.status === 401 && !originalRequest._retry) {
+    // If 401 or 403 (token invalid/expired) and we haven't retried this request yet
+    const status = error.response?.status;
+    if ((status === 401 || status === 403) && !originalRequest._retry) {
       originalRequest._retry = true;
 
       if (isRefreshing) {
