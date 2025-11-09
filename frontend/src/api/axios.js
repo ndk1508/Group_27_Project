@@ -2,8 +2,10 @@
 import axios from "axios";
 import tokenService from "../utils/tokenService";
 
+const BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
+
 const api = axios.create({
-  baseURL: "http://localhost:3000", // backend chạy ở port 3000
+  baseURL: BASE_URL, // uses REACT_APP_API_URL in production (Vercel)
   // If backend sets httpOnly cookie for refreshToken we may need credentials for refresh calls
 });
 
@@ -56,7 +58,7 @@ api.interceptors.response.use(
         const useCookie = !refreshToken;
 
         const resp = await axios.post(
-          "http://localhost:3000/api/auth/refresh",
+          `${BASE_URL}/api/auth/refresh`,
           useCookie ? {} : { refreshToken },
           { withCredentials: true }
         );
