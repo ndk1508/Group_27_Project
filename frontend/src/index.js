@@ -1,7 +1,12 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
-// Explicitly import the .jsx file to avoid resolving App.js (which has no default export)
+import { Provider } from 'react-redux';
 import App from "./App.jsx";
+import store from './store/store';
 
 const root = createRoot(document.getElementById("root"));
-root.render(<App />);
+root.render(
+	<Provider store={store}>
+		<App />
+	</Provider>
+);
