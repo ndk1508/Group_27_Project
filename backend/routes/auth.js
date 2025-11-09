@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const authController = require("../controllers/authController");
 const authMiddleware = require("../middleware/authMiddleware");
+const { verifyAccessToken } = require("../middleware/authMiddleware");
 const upload = require("../middleware/upload");
 const loginRateLimiter = require("../middleware/loginRateLimiter")();
 const { refreshToken } = require('../controllers/authController');
@@ -24,6 +25,9 @@ router.post("/reset-password/:token", authController.resetPassword);
 router.post("/reset-password", authController.resetPassword);
 // Upload avatar (cần đăng nhập)
 router.post("/upload-avatar", authMiddleware, upload.single("avatar"), authController.uploadAvatar);
+
+// Get current logged-in user (for frontend auth check)
+router.get("/me", verifyAccessToken, authController.getMe);
 
 router.post('/refresh', refreshToken);
 

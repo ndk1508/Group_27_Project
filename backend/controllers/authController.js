@@ -306,3 +306,27 @@ exports.refreshToken = async (req, res) => {
     res.status(500).json({ message: 'Server error', error });
   }
 };
+
+// ======================================================
+//  GET CURRENT USER (for frontend Redux / protected routes)
+// ======================================================
+exports.getMe = async (req, res) => {
+  try {
+    // verifyAccessToken middleware already attached req.user
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: 'Not authenticated' });
+
+    // Return only safe/public fields
+    const safe = {
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      avatar: user.avatar || null,
+    };
+
+    res.json({ user: safe });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+};
