@@ -1,63 +1,63 @@
-Project: Group_27_Project — Fullstack Auth & Admin Demo
+Project: Group_27_Project — Demo toàn diện (Authentication & Admin)
 
-This repository contains a Node/Express backend and a React frontend used for a class project
-that implements authentication (JWT with refresh), RBAC, avatar upload, password reset (email),
-activity logging and a simple rate limiter.
+Kho chứa này gồm backend Node/Express và frontend React cho bài tập môn, triển khai các
+tính năng: xác thực JWT (kèm refresh), phân quyền (RBAC), upload avatar, đặt lại mật khẩu qua
+email, ghi nhận hoạt động (activity logs) và một rate limiter đơn giản.
 
-Quick contacts / responsibilities
-- Nguyễn Đăng Khoa — Backend, APIs, DB, CI
-- Lâm Minh Hiếu — Frontend, React UI
-- Lê Minh Huy — Database, seed scripts
+Người phụ trách chính
+- Nguyễn Đăng Khoa — Backend, API, cơ sở dữ liệu
+- Lâm Minh Hiếu — Frontend, giao diện React
+- Lê Minh Huy — Database, script seed
 
-This README covers how to run the app locally, seed test users, and run smoke tests useful for
-Activity 7 (final integration + demo).
+Tài liệu này hướng dẫn chạy dự án local, seed dữ liệu kiểm thử và các bước kiểm tra cho
+Hoạt động 7 (tích hợp và demo).
 
-## Prerequisites
-- Node.js (>=18 recommended) and npm installed
-- MongoDB access: either local MongoDB or MongoDB Atlas connection string
-- (Optional) Cloudinary account for avatar uploads
-- (Optional) Gmail App Password or Mailtrap credentials for sending emails
+## Yêu cầu trước khi chạy
+- Cài Node.js (khuyến nghị >=18) và npm
+- Có truy cập MongoDB (local hoặc MongoDB Atlas)
+- (Tuỳ chọn) Tài khoản Cloudinary nếu muốn upload avatar
+- (Tuỳ chọn) Gmail App Password hoặc Mailtrap để gửi email khi test
 
-## Repo layout (important paths)
-- backend/ — Express server, controllers, models, scripts
-- frontend/ — React app (Create React App)
+## Cấu trúc repo (đường dẫn quan trọng)
+- `backend/` — server Express, controllers, models, scripts
+- `frontend/` — ứng dụng React (Create React App)
 
-## Backend setup
-1. Open a terminal and install deps:
+## Thiết lập backend
+1. Cài dependency:
 
 ```powershell
 cd backend
 npm install
 ```
 
-2. Create `backend/.env` from `backend/.env.example` and fill values (DO NOT commit `.env`).
-	 - `MONGODB_URI` (or `MONGO_URI`) must point to your MongoDB instance.
-	 - Set `ACCESS_TOKEN_SECRET` and `REFRESH_TOKEN_SECRET` for JWTs.
+2. Tạo file `backend/.env` từ `backend/.env.example` và điền giá trị (KHÔNG commit `.env`).
+	 - `MONGODB_URI` (hoặc `MONGO_URI`) trỏ tới MongoDB của bạn.
+	 - Thiết lập `ACCESS_TOKEN_SECRET` và `REFRESH_TOKEN_SECRET` cho JWT.
 
-3. Seed test users (creates admin@example.com and user@example.com):
+3. Tạo user kiểm thử (seed):
 
 ```powershell
 npm run seed:users
 ```
 
-4. Start backend in development mode (nodemon):
+4. Chạy server ở chế độ dev (nodemon):
 
 ```powershell
 npm run dev
 ```
 
-5. Available useful endpoints:
-- POST /api/auth/signup — register (supports optional avatar upload)
-- POST /api/auth/login — login (returns accessToken + refreshToken)
-- POST /api/auth/refresh — rotate refresh token, obtain new accessToken
-- POST /api/auth/forgot-password — start password reset (dev returns raw token)
-- POST /api/auth/reset-password — complete reset (token in body or URL param)
-- GET /api/auth/me — protected, returns current user info (use Authorization header)
-- POST /api/auth/upload-avatar — protected, multipart/form-data (avatar)
-- GET /admin/logs — protected admin-only (view activity logs)
+5. Một số endpoint chính:
+- `POST /api/auth/signup` — đăng ký (hỗ trợ upload avatar)
+- `POST /api/auth/login` — đăng nhập (trả `accessToken` + `refreshToken`)
+- `POST /api/auth/refresh` — refresh token, lấy access token mới
+- `POST /api/auth/forgot-password` — bắt đầu đặt lại mật khẩu (dev trả raw token để test)
+- `POST /api/auth/reset-password` — hoàn tất đặt lại mật khẩu
+- `GET /api/auth/me` — protected, trả info người dùng hiện tại (dùng header Authorization)
+- `POST /api/auth/upload-avatar` — protected, multipart/form-data (avatar)
+- `GET /admin/logs` — protected (chỉ admin), xem activity logs
 
-## Frontend setup
-1. Install deps and start dev server:
+## Thiết lập frontend
+1. Cài dependency và chạy:
 
 ```powershell
 cd frontend
@@ -65,41 +65,43 @@ npm install
 npm start
 ```
 
-2. Default frontend runs on http://localhost:3000 — set `FRONTEND_URL` in backend `.env` accordingly.
+2. Frontend mặc định chạy ở `http://localhost:3000` — thiết lập `FRONTEND_URL` trong
+	 `backend/.env` nếu cần.
 
-## Smoke tests (what to exercise for Activity 7)
-- Signup a new account (or use seeded users)
-- Login and verify you receive `accessToken` and `refreshToken`
-- Call `GET /api/auth/me` with `Authorization: Bearer <accessToken>` to fetch profile
-- Call `POST /api/auth/refresh` with current refresh token and verify new tokens
-- Trigger forgot-password for a user and use the returned raw token (dev) to call reset
-- Upload an avatar via the upload endpoint and confirm Cloudinary URL saved
-- Check admin-only endpoints with `admin@example.com` (seeded admin)
+## Kiểm thử nhanh (Smoke tests) — các flow cần kiểm tra cho Hoạt động 7
+- Đăng ký tài khoản mới (hoặc dùng tài khoản đã seed)
+- Đăng nhập và xác nhận nhận `accessToken` + `refreshToken`
+- Gọi `GET /api/auth/me` với header `Authorization: Bearer <accessToken>` để lấy profile
+- Gọi `POST /api/auth/refresh` với refresh token và kiểm tra nhận token mới
+- Thực hiện forgot-password (dev trả raw token), dùng token đó để gọi reset-password
+- Upload avatar và kiểm tra URL Cloudinary được lưu
+- Dùng `admin@example.com` (seeded admin) để kiểm tra endpoint admin (/admin/logs)
 
-I provide `backend/scripts/smokeTest.js` (if present) to run the flow automatically — or use
-the Postman collection (optional) to run the same checks.
+Có thể dùng `backend/scripts/smokeTest.js` (nếu có) để chạy tự động các bước trên, hoặc
+sử dụng Postman collection.
 
-## Postman / Demo artifacts
-- For the deliverable, prepare:
-	- A short screen recording (5–10 min) showing: signup, login, refresh token, avatar upload,
-		forgot/reset password, and admin logs.
-	- Exported Postman collection with requests for the flows above and include sample environment
-		with `baseUrl`, `accessToken` variables.
+## Postman / Tài liệu demo
+- Để nộp bài, chuẩn bị:
+	- Video quay màn hình (5–10 phút) minh họa: signup, login, refresh token, upload avatar,
+		forgot/reset password, và truy cập admin logs.
+	- Export Postman collection chứa các request dùng cho flow trên, kèm environment mẫu
+		(`baseUrl`, `accessToken`…).
 
-## Notes / Production cautions
-- Seeder and dev-mode behaviors (raw reset token) are for development/testing only. Remove
-	debug responses before production.
-- Rate limiter is in-memory (suitable only for single-server development). Use Redis for
-	distributed rate limiting in production.
-- Ensure secrets (JWT, DB, email) are stored securely and never committed.
+## Lưu ý khi đưa lên production
+- Seeder và việc trả raw reset token chỉ dùng cho phát triển; loại bỏ debug responses trước
+	khi deploy.
+- Rate limiter hiện dùng bộ nhớ trong (in-memory) — chỉ phù hợp môi trường single-node.
+	Sử dụng Redis nếu cần triển khai đa node.
+- Đảm bảo lưu trữ bí mật (JWT secrets, DB credentials, email creds) an toàn; không commit vào
+	Git.
 
-## Help / troubleshooting
-- If DB connection fails, confirm `MONGODB_URI` and network access (Atlas IP whitelist).
-- If email sending fails, check `EMAIL_USER`/`EMAIL_PASS` and provider settings (Gmail App
-	Password or Mailtrap credentials recommended for testing).
+## Khắc phục sự cố
+- Nếu không kết nối được DB, kiểm tra `MONGODB_URI` và whitelist IP (nếu dùng Atlas).
+- Nếu gửi email thất bại, kiểm tra `EMAIL_USER` / `EMAIL_PASS` và cấu hình nhà cung cấp
+	(Gmail App Password hoặc Mailtrap cho testing).
 
 ---
 
-If you want, I can now: (A) add/commit this README and improved `backend/.env.example` to a
-branch and push it (recommended), and (B) add a smoke-test script or Postman collection.
-Choose which and I'll proceed.
+Tôi đã cập nhật tài liệu README và `backend/.env.example`. Muốn tôi tiếp tục thêm: (A) script
+smoke-test tự động, (B) Postman collection, hoặc (C) tạo PR và mô tả merge, hãy nói tôi biết —
+tôi sẽ làm tiếp.
